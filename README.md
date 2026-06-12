@@ -178,3 +178,4 @@ A complete 8-week engineering retrospective covering architecture decisions, les
 6. [Week 6: Closing the Loop — Hybrid Knowledge Retrieval and Capability Integration](https://dev.to/jamesli/hybrid-knowledge-retrieval-combining-neo4j-graph-queries-graphrag-and-vector-search-for-3f89)
 7. [Week 7: Production Optimization — Inference Cost and Performance Control](https://dev.to/jamesli/production-optimization-inference-cost-and-performance-control-2433)
 8. [Week 8: 8-Week Retrospective — Architecture Decisions, Lessons Learned & Best Practices](https://dev.to/jamesli/building-a-production-grade-llm-customer-service-in-8-weeks-architecture-decisions-pitfalls-and-4nmi)
+9. [From 60% to 93%: How We Built a Continuous Evaluation Framework for LLM Systems](https://dev.to/jamesli/from-60-to-93-how-we-built-a-continuous-evaluation-framework-for-llm-systems-i4)
