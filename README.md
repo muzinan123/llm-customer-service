@@ -2,132 +2,215 @@
 
 A production-grade intelligent customer service system built with FastAPI and Vue 3, deeply adapted for e-commerce scenarios. Covers mainstream production-level requirements including Agent orchestration, RAG, safety guardrails, and cost optimization.
 
+---
+
 ## Project Overview
+
 - **Positioning**: Production-grade LLM customer service system built from 0 to deployment in 8 weeks — not a toy demo
 - **Use Cases**: E-commerce customer support, after-sales consultation, order inquiry, product knowledge base Q&A
-- **Technical Highlights**:
-  - Hybrid knowledge retrieval (GraphRAG + Vector Search + Text2Cypher)
-  - Multi-Agent orchestration and task decomposition based on LangGraph
-  - Three-layer full-chain safety guardrails (Input → Execution → Output)
-  - Semantic caching + tiered model routing, reducing inference cost by 70%
-- **Quantifiable Results**:
-  - Q&A accuracy 94% (based on 500 manually labeled test cases, Recall@3 evaluation)
-  - 1500 QPS throughput (load tested on 4-core 8GB cloud server with Redis caching layer)
-  - 99.9% service availability, 98% scenario coverage
-  - 95% prompt injection interception rate (based on OWASP LLM Top10 attack samples)
+
+### Technical Highlights
+
+- Hybrid knowledge retrieval (GraphRAG + Vector Search + Text2Cypher)
+- Multi-Agent orchestration and task decomposition based on LangGraph
+- Three-layer full-chain safety guardrails (Input → Execution → Output)
+- Semantic caching + tiered model routing, reducing inference cost by 70%
+- **Three-key Redis design** (vec / resp / meta separation) — query scans vector keys only, minimizing Redis bandwidth
+- **UUID5-based deterministic multi-tenant isolation** for concurrent GraphRAG indexing
+- **LangGraph Send API fan-out/fan-in** for parallel multi-subtask execution
+- **Four GraphRAG query modes** (Local / Global / Drift / Basic) with adaptive data dependency selection
+- **Cache-transparent pseudo-streaming**: cache hits simulate token-by-token output, frontend UX identical to live inference
+
+### Quantifiable Results
+
+| Metric | Value | Measurement Basis |
+|:---|:---|:---|
+| Q&A Accuracy | **94%** | 500 manually labeled test cases, Recall@3 |
+| Throughput | **1500 QPS** | Load tested on 4-core 8GB cloud server with Redis caching |
+| Service Availability | **99.9%** | — |
+| Scenario Coverage | **98%** | — |
+| Prompt Injection Interception | **95%** | OWASP LLM Top10 attack samples |
+
+---
 
 ## System Architecture
 
-```plaintext
-┌─────────────────────────────────────────────────────────────────────────────┐
-│                        LLM Application Architecture Layer                    │
-│                                                                               │
-│  ┌─────────────────────────────────────────────────────────────────────┐    │
-│  │  Application Layer                                                   │    │
-│  │  · User Service (Login / Register)  · Session Service               │    │
-│  │  · Knowledge Base Service                                            │    │
-│  └─────────────────────────────────────────────────────────────────────┘    │
-│                                                                               │
-│  ┌─────────────────────────────────────────────────────────────────────┐    │
-│  │  Feature Layer                                                       │    │
-│  │  · Multi-Agent Architecture    · Safety Guardrails                   │    │
-│  │  · Text2Cypher Debug           · Offline/Online Index Construction   │    │
-│  │  · Hybrid Knowledge Retrieval                                        │    │
-│  └─────────────────────────────────────────────────────────────────────┘    │
-└─────────────────────────────────────────────────────────────────────────────┘
-                                      │
-                                      ▼
-┌─────────────────────────────────────────────────────────────────────────────┐
-│                         LLM Technology Architecture Layer                    │
-│                                                                               │
-│  ┌───────────────┐        ┌───────────────┐        ┌───────────────┐        │
-│  │     Agent     │        │      RAG      │        │   Workflow    │        │
-│  └───────────────┘        └───────────────┘        └───────────────┘        │
-│                                                                               │
-│  ┌─────────────────────────────────────────────────────────────────────┐    │
-│  │            LangChain / LangGraph / Microsoft GraphRAG                │    │
-│  └─────────────────────────────────────────────────────────────────────┘    │
-│                                                                               │
-│  ┌─────────────────────────────────────────────────────────────────────┐    │
-│  │                  Vue / FastAPI / SSE / Open API                      │    │
-│  └─────────────────────────────────────────────────────────────────────┘    │
-└─────────────────────────────────────────────────────────────────────────────┘
-                                      │
-                                      ▼
-┌─────────────────────────────────────────────────────────────────────────────┐
-│                          LLM Platform Architecture Layer                     │
-│                                                                               │
-│  ┌─────────────────────────────────────────────────────────────────────┐    │
-│  │  Model Layer                                                         │    │
-│  │  · DeepSeek Online Model              · vLLM Model Deployment        │    │
-│  └─────────────────────────────────────────────────────────────────────┘    │
-│                                                                               │
-│  ┌─────────────────────────────────────────────────────────────────────┐    │
-│  │  Data Layer                                                          │    │
-│  │  · MySQL    · Redis    · Neo4J    · Memory    · Local Disk · LanceDB │    │
-│  └─────────────────────────────────────────────────────────────────────┘    │
-│                                                                               │
-│  ┌─────────────────────────────────────────────────────────────────────┐    │
-│  │  Infrastructure Layer                                                │    │
-│  │  · Cloud Server          · GPU Server          · Docker Platform     │    │
-│  └─────────────────────────────────────────────────────────────────────┘    │
-└─────────────────────────────────────────────────────────────────────────────┘
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                        User Request                              │
+└─────────────────────────┬───────────────────────────────────────┘
+                           │
+                           ▼
+┌─────────────────────────────────────────────────────────────────┐
+│                   Redis Semantic Cache Layer                      │
+│                                                                   │
+│   Three-Key Design: vec:{md5} / resp:{md5} / meta:{md5}          │
+│   ① Cosine similarity scan on vec keys only                      │
+│   ② Cache HIT  → pseudo-streaming response (UX identical)       │
+│   ③ Cache MISS → proceed to Agent                               │
+└─────────────────────────┬───────────────────────────────────────┘
+                           │ MISS
+                           ▼
+┌─────────────────────────────────────────────────────────────────┐
+│                  LangGraph Agent Orchestration                    │
+│                                                                   │
+│   analyze_and_route_query (LLM structured output → 5 classes)   │
+│          │                                                        │
+│          ├── general-query    → respond_to_general_query         │
+│          ├── additional-query → Dual-Layer Guardrails            │
+│          │                      Layer 1: Intent filter           │
+│          │                      Layer 2: Live Neo4j Schema check │
+│          │                      → get_additional_info            │
+│          ├── graphrag-query   → create_research_plan             │
+│          ├── image-query      → create_image_query               │
+│          └── file-query       → create_file_query                │
+│                                                                   │
+│   ┌────────────────────────────────────────────────────────┐    │
+│   │           kg_sub_graph: Multi-Tool Workflow             │    │
+│   │                                                         │    │
+│   │  planner → [Send API fan-out]                           │    │
+│   │      ↓           ↓           ↓      (parallel)         │    │
+│   │  tool_sel    tool_sel    tool_sel                        │    │
+│   │      ↓           ↓           ↓                          │    │
+│   │  ┌────────┐ ┌──────────┐ ┌─────────┐                   │    │
+│   │  │Cypher  │ │GraphRAG  │ │ Search  │                   │    │
+│   │  │Query   │ │Semantic  │ │ SerpAPI │                   │    │
+│   │  └────────┘ └──────────┘ └─────────┘                   │    │
+│   │      ↓           ↓           ↓      (fan-in)            │    │
+│   │                summarize                                 │    │
+│   │                   ↓                                      │    │
+│   │              final_answer                                │    │
+│   └────────────────────────────────────────────────────────┘    │
+└─────────────────────────┬───────────────────────────────────────┘
+                           │
+                           ▼
+┌─────────────────────────────────────────────────────────────────┐
+│                   Knowledge Retrieval Layer                       │
+│                                                                   │
+│  ┌──────────────────┐ ┌──────────────────┐ ┌────────────────┐   │
+│  │  Text2Cypher     │ │  GraphRAG         │ │ Vector Search  │   │
+│  │                  │ │                   │ │                │   │
+│  │  NL → Cypher     │ │  Local Search     │ │ FAISS +        │   │
+│  │  → Neo4j         │ │  Global Search    │ │ Multilingual   │   │
+│  │  Self-correct    │ │  Drift Search     │ │ MiniLM         │   │
+│  │  (max 3 retry)   │ │  Basic Search     │ │                │   │
+│  └──────────────────┘ └──────────────────┘ └────────────────┘   │
+│  Structured Data        Unstructured Knowledge   Semantic Docs   │
+│  (orders/inventory)     (after-sales/manuals)    (RAG files)     │
+└─────────────────────────┬───────────────────────────────────────┘
+                           │
+                           ▼
+┌─────────────────────────────────────────────────────────────────┐
+│                      Data & Model Layer                           │
+│  MySQL · Redis · Neo4J · LanceDB · Local Disk                    │
+│  DeepSeek API · Ollama (Qwen2.5 / Llama3 / DeepSeek)            │
+│  Docker · Cloud Server · GPU Server                              │
+└─────────────────────────────────────────────────────────────────┘
 ```
 
+---
+
 ## Tech Stack
-- **Backend**: FastAPI
-- **Frontend**: Vue 3
-- **Agent Orchestration**: LangChain / LangGraph
-- **RAG Engine**: Microsoft GraphRAG
-- **Vector Database**: LanceDB
-- **Graph Database**: Neo4J
-- **Relational Database**: MySQL
-- **Cache / Message Queue**: Redis
-- **Local Model Inference**: Ollama (Qwen2.5 / Llama3 / DeepSeek series)
-- **Online Model API**: DeepSeek API / OpenAI Compatible
-- **Deployment**: Docker
+
+| Category | Technology |
+|:---|:---|
+| Backend | FastAPI |
+| Frontend | Vue 3 |
+| Agent Orchestration | LangChain / LangGraph |
+| RAG Engine | Microsoft GraphRAG |
+| Vector Database | LanceDB |
+| Graph Database | Neo4J |
+| Relational Database | MySQL |
+| Cache / Message Queue | Redis |
+| Local Model Inference | Ollama (Qwen2.5 / Llama3 / DeepSeek series) |
+| Online Model API | DeepSeek API / OpenAI Compatible |
+| Deployment | Docker |
+
+---
 
 ## Core Features
 
 ### 1. Hybrid Knowledge Retrieval
-- Unified query interface for structured data (orders / inventory / customers) and unstructured knowledge (after-sales policies / product manuals)
-- Intelligent routing automatically selects the optimal retrieval strategy (GraphRAG / Vector Search / Text2Cypher)
-- Multimodal PDF parsing and dynamic-aware chunking based on MinerU + LitServe
+
+Unified query interface for structured data (orders / inventory / customers) and unstructured knowledge (after-sales policies / product manuals). Intelligent routing automatically selects the optimal retrieval strategy (GraphRAG / Vector Search / Text2Cypher). Multimodal PDF parsing and dynamic-aware chunking based on MinerU + LitServe.
+
+**Four GraphRAG Query Modes** (adaptive selection based on query type):
+
+| Mode | Use Case | Data Dependency |
+|:---|:---|:---|
+| Local | Precise entity queries | entities + relationships + text_units + covariates |
+| Global | Thematic / macro analysis | communities + community_reports |
+| Drift | Exploratory queries | entities + relationships + text_units |
+| Basic | Lightweight lookup | text_units only |
 
 ### 2. Multi-Agent Orchestration
-- Full-chain collaboration via LangGraph: intent recognition → routing → task decomposition → tool execution → result aggregation
-- Automatic decomposition and parallel processing of complex multi-intent queries
+
+Full-chain collaboration via LangGraph: intent recognition → routing → task decomposition → tool execution → result aggregation. Automatic decomposition and parallel processing of complex multi-intent queries.
+
+**LangGraph Send API fan-out/fan-in pattern**:
+- `planner` node decomposes complex queries into independent subtasks
+- Each subtask dispatched in parallel to dedicated `tool_selection` nodes
+- Results aggregated in `summarize` → `final_answer`
+- **Short-circuit optimization**: single-tool scenarios bypass LLM routing, saving token cost
+- **Sliding window history**: last 5 Q&A pairs maintained per session to bound context growth
 
 ### 3. Three-Layer Full-Chain Safety Guardrails
-- **Input Layer**: Malicious prompt detection, user permission validation, sensitive information filtering
-- **Execution Layer**: Tool call permission control, privilege escalation interception, loop call circuit breaking
-- **Output Layer**: Response content safety filtering, hallucination detection / fact verification, sensitive data masking
+
+**Input Layer**: Malicious prompt detection, user permission validation, sensitive information filtering
+
+**Execution Layer**: Tool call permission control, privilege escalation interception, loop call circuit breaking
+
+**Output Layer**: Response content safety filtering, hallucination detection / fact verification, sensitive data masking
 
 ### 4. Cost & Performance Optimization
-- Dual-layer semantic caching (exact match + semantic similarity match), cache hit rate up to 72%
-- Tiered model routing (lightweight models for simple queries, large models for complex reasoning)
-- Streaming response output, time-to-first-token optimized to under 500ms
-- Built-in Ollama performance testing tool: single-request / concurrent benchmarking, system resource monitoring, automated test reports
+
+Dual-layer semantic caching (exact match + semantic similarity match), cache hit rate up to 72%. Tiered model routing (lightweight models for simple queries, large models for complex reasoning). Streaming response output, time-to-first-token optimized to under 500ms. Built-in Ollama performance testing tool: single-request / concurrent benchmarking, system resource monitoring, automated test reports.
+
+**Redis Semantic Cache — Three-Key Architecture**:
+
+```
+cache:{user_id}:vec:{md5}   ← Vector key (cosine similarity scan only)
+cache:{user_id}:resp:{md5}  ← Response content
+cache:{user_id}:meta:{md5}  ← Metadata (access time / hit count)
+```
+
+- Query path scans `vec` keys only → fetches `resp` on hit → updates `meta` independently
+- Per-user key namespace ensures complete cross-user cache isolation
+- LRU auto-eviction when cache exceeds `max_cache_size`, sorted by `last_access`
+- **Cache-transparent pseudo-streaming**: cache hits simulate token-by-token streaming — frontend UX identical to live inference
+
+**Multi-Tenant GraphRAG Indexing**:
+
+```python
+# UUID5 deterministic isolation — same user_id always maps to same directory
+user_uuid = uuid.uuid5(uuid.NAMESPACE_DNS, f"user_{user_id}")
+
+# Runtime config injection — no global config file modification needed
+config_overrides = {
+    'input.base_dir': user_input_dir,
+    'output.base_dir': user_output_dir,
+}
+```
+
+UUID5 (vs UUID4) ensures directory paths survive service restarts. `config_overrides` runtime injection allows concurrent multi-user indexing with zero interference.
+
+---
 
 ## Quick Start
 
 ### 1. Install Dependencies
+
 ```bash
-# Create virtual environment
 python -m venv .venv
-
-# Activate virtual environment
-# Windows
-.venv\Scripts\activate
-# Linux/Mac
-source .venv/bin/activate
-
-# Install dependencies
+source .venv/bin/activate      # Linux/Mac
+.venv\Scripts\activate         # Windows
 pip install -r requirements.txt
 ```
 
 ### 2. Configure Environment Variables
-Copy `env.example` to `llm_backend/.env` and update the values accordingly:
+
+Copy `env.example` to `llm_backend/.env`:
+
 ```env
 # LLM Service Configuration
 CHAT_SERVICE=OLLAMA        # or DEEPSEEK
@@ -152,20 +235,22 @@ MYSQL_DATABASE=llm_customer_service
 ```
 
 ### 3. Initialize Database
+
 ```bash
 cd llm_backend
 python scripts/init_db.py
 ```
 
 ### 4. Start the Service
+
 ```bash
-# Start service (default port 8000)
 python run.py
 ```
 
-Once running, access:
 - API Docs: http://localhost:8000/docs
 - Frontend UI: http://localhost:8000
+
+---
 
 ## Engineering Deep-Dive Series
 A complete 8-week engineering retrospective covering architecture decisions, lessons learned, and best practices:
