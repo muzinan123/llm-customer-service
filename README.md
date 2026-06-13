@@ -1,6 +1,8 @@
 # Enterprise LLM Customer Service System
 
-A production-grade intelligent customer service system built with FastAPI and Vue 3, deeply adapted for e-commerce scenarios. Covers mainstream production-level requirements including Agent orchestration, RAG, safety guardrails, and cost optimization.
+A production-grade multi-agent intelligent customer service system built with FastAPI + LangGraph + GraphRAG. 8 weeks from 0 to production deployment — not a toy demo.
+
+> Unlike simple RAG chatbots, this system implements full production-grade capabilities: multi-agent orchestration, hybrid knowledge retrieval, end-to-end safety guardrails, cost optimization, and continuous evaluation — all validated in real e-commerce customer service scenarios.
 
 ---
 
@@ -23,13 +25,14 @@ A production-grade intelligent customer service system built with FastAPI and Vu
 
 ### Quantifiable Results
 
-| Metric | Value | Measurement Basis |
-|:---|:---|:---|
-| Q&A Accuracy | **94%** | 500 manually labeled test cases, Recall@3 |
-| Throughput | **1500 QPS** | Load tested on 4-core 8GB cloud server with Redis caching |
-| Service Availability | **99.9%** | — |
-| Scenario Coverage | **98%** | — |
-| Prompt Injection Interception | **95%** | OWASP LLM Top10 attack samples |
+| Metric | Before | After | Measurement Basis |
+|:---|:---|:---|:---|
+| Q&A Accuracy | 70% | **94%** | 500 manually labeled test cases, Recall@3 |
+| Throughput | — | **1500 QPS** | Load tested on 4-core 8GB cloud server with Redis caching |
+| Inference Cost | baseline | **-70%** | vs. single large-model inference |
+| Service Availability | — | **99.9%** | 72-hour stability load test |
+| Scenario Coverage | — | **98%** | 8 core business scenario statistics |
+| Prompt Injection Interception | — | **95%** | OWASP LLM Top10 attack samples |
 
 ---
 
@@ -108,6 +111,8 @@ A production-grade intelligent customer service system built with FastAPI and Vu
 └─────────────────────────────────────────────────────────────────┘
 ```
 
+> *Request flow: User request → Redis semantic cache (HIT: pseudo-streaming response / MISS: proceed) → LangGraph agent routing → parallel knowledge retrieval → result aggregation → response.*
+
 ---
 
 ## Tech Stack
@@ -119,6 +124,7 @@ A production-grade intelligent customer service system built with FastAPI and Vu
 | Agent Orchestration | LangChain / LangGraph |
 | RAG Engine | Microsoft GraphRAG |
 | Vector Database | LanceDB |
+| Embedding / Index | Multilingual MiniLM + FAISS |
 | Graph Database | Neo4J |
 | Relational Database | MySQL |
 | Cache / Message Queue | Redis |
@@ -140,7 +146,7 @@ Unified query interface for structured data (orders / inventory / customers) and
 |:---|:---|:---|
 | Local | Precise entity queries | entities + relationships + text_units + covariates |
 | Global | Thematic / macro analysis | communities + community_reports |
-| Drift | Exploratory queries | entities + relationships + text_units |
+| Drift | Exploratory queries (loose relevance constraints) | entities + relationships + text_units |
 | Basic | Lightweight lookup | text_units only |
 
 ### 2. Multi-Agent Orchestration
@@ -148,9 +154,9 @@ Unified query interface for structured data (orders / inventory / customers) and
 Full-chain collaboration via LangGraph: intent recognition → routing → task decomposition → tool execution → result aggregation. Automatic decomposition and parallel processing of complex multi-intent queries.
 
 **LangGraph Send API fan-out/fan-in pattern**:
-- `planner` node decomposes complex queries into independent subtasks
-- Each subtask dispatched in parallel to dedicated `tool_selection` nodes
-- Results aggregated in `summarize` → `final_answer`
+- **Problem**: Serial tool execution for multi-intent queries leads to compounding latency
+- **Design**: `planner` node decomposes complex queries into independent subtasks, each dispatched in parallel via Send API, results aggregated in `summarize` → `final_answer`
+- **Result**: Complex multi-tool query latency reduced by 40%+
 - **Short-circuit optimization**: single-tool scenarios bypass LLM routing, saving token cost
 - **Sliding window history**: last 5 Q&A pairs maintained per session to bound context growth
 
@@ -174,10 +180,10 @@ cache:{user_id}:resp:{md5}  ← Response content
 cache:{user_id}:meta:{md5}  ← Metadata (access time / hit count)
 ```
 
-- Query path scans `vec` keys only → fetches `resp` on hit → updates `meta` independently
-- Per-user key namespace ensures complete cross-user cache isolation
-- LRU auto-eviction when cache exceeds `max_cache_size`, sorted by `last_access`
-- **Cache-transparent pseudo-streaming**: cache hits simulate token-by-token streaming — frontend UX identical to live inference
+- **Problem**: Full cache entry scanning wastes Redis bandwidth; monolithic key design risks cross-user data leakage
+- **Design**: Separate vector / response / metadata into independent key sets; queries scan only lightweight vector entries; per-user namespace enforces full isolation
+- **Result**: Redis bandwidth minimized, LRU auto-eviction (`last_access` sorted) guarantees memory stability
+- **Cache-transparent pseudo-streaming**: cache hits simulate token-by-token streaming — frontend UX identical to live inference, zero perceived difference
 
 **Multi-Tenant GraphRAG Indexing**:
 
@@ -192,7 +198,17 @@ config_overrides = {
 }
 ```
 
-UUID5 (vs UUID4) ensures directory paths survive service restarts. `config_overrides` runtime injection allows concurrent multi-user indexing with zero interference.
+- **Problem**: UUID4 random paths break after service restarts; concurrent multi-user indexing causes mutual interference
+- **Design**: UUID5 deterministic mapping from user ID to directory path; `config_overrides` runtime injection without modifying global config files
+- **Result**: Zero cross-user data pollution, directory paths persist across service restarts, supports fully concurrent multi-user indexing
+
+### 5. Continuous Evaluation & Iteration Loop
+
+- **Golden dataset**: 200+ labeled test cases covering 8 core business scenarios, mixing real production data and adversarial edge cases
+- **Regression gate**: 2% accuracy drop threshold automatically blocks deployment, preventing online degradation
+- **Two-layer accuracy definition**: execution accuracy (70%) + semantic accuracy (30%) with manual sampling
+- **Closed feedback loop**: online failure cases automatically archived and periodically supplemented to test sets and Few-shot samples
+- **Result**: SQL generation accuracy improved from 60% to 93%, human review rate reduced to 5%
 
 ---
 
@@ -253,6 +269,7 @@ python run.py
 ---
 
 ## Engineering Deep-Dive Series
+
 A complete 8-week engineering retrospective covering architecture decisions, lessons learned, and best practices:
 
 1. [Week 1: Architecture Overview — Building a Production-Grade AI Customer Service System from Scratch](https://dev.to/jamesli/-from-0-to-mvp-in-2-weeks-building-a-production-grade-ai-customer-service-system-322n)
@@ -263,4 +280,4 @@ A complete 8-week engineering retrospective covering architecture decisions, les
 6. [Week 6: Closing the Loop — Hybrid Knowledge Retrieval and Capability Integration](https://dev.to/jamesli/hybrid-knowledge-retrieval-combining-neo4j-graph-queries-graphrag-and-vector-search-for-3f89)
 7. [Week 7: Production Optimization — Inference Cost and Performance Control](https://dev.to/jamesli/production-optimization-inference-cost-and-performance-control-2433)
 8. [Week 8: 8-Week Retrospective — Architecture Decisions, Lessons Learned & Best Practices](https://dev.to/jamesli/building-a-production-grade-llm-customer-service-in-8-weeks-architecture-decisions-pitfalls-and-4nmi)
-9. [From 60% to 93%: How We Built a Continuous Evaluation Framework for LLM Systems](https://dev.to/jamesli/from-60-to-93-how-we-built-a-continuous-evaluation-framework-for-llm-systems-i4)
+9. [Bonus: From 60% to 93% — How We Built a Continuous Evaluation Framework for LLM Systems](https://dev.to/jamesli/from-60-to-93-how-we-built-a-continuous-evaluation-framework-for-llm-systems-i4)
