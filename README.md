@@ -9,7 +9,7 @@ A production-grade multi-agent intelligent system built with FastAPI + LangGraph
 
 ## Project Overview
 
-- **Positioning**: Production-grade LLM application built from 0 to deployment in 8 weeks — not a toy demo.Although validated in e-commerce customer service scenarios, the core architecture patterns (GraphRAG, Multi-Agent orchestration, hybrid retrieval, safety guardrails) are domain-agnostic and directly transferable to finance, legal, ESG compliance, healthcare, and any knowledge-intensive LLM application.
+- **Positioning**: Production-grade LLM application built from 0 to deployment in 8 weeks — not a toy demo. Although validated in e-commerce customer service scenarios, the core architecture patterns (GraphRAG, Multi-Agent orchestration, hybrid retrieval, safety guardrails) are domain-agnostic and directly transferable to finance, legal, ESG compliance, healthcare, and any knowledge-intensive LLM application.
 - **Reference Implementation**: E-commerce customer support, after-sales consultation, order inquiry, product knowledge base Q&A
 
 ### Technical Highlights
