@@ -1,6 +1,7 @@
-# Enterprise LLM Customer Service System
+# Enterprise LLM Application System
 
-A production-grade multi-agent intelligent customer service system built with FastAPI + LangGraph + GraphRAG. 8 weeks from 0 to production deployment — not a toy demo.
+A production-grade multi-agent intelligent system built with FastAPI + LangGraph + GraphRAG. 8 weeks from 0 to production deployment — not a toy demo.
+
 
 > Unlike simple RAG chatbots, this system implements full production-grade capabilities: multi-agent orchestration, hybrid knowledge retrieval, end-to-end safety guardrails, cost optimization, and continuous evaluation — all validated in real e-commerce customer service scenarios.
 
@@ -8,8 +9,8 @@ A production-grade multi-agent intelligent customer service system built with Fa
 
 ## Project Overview
 
-- **Positioning**: Production-grade LLM customer service system built from 0 to deployment in 8 weeks — not a toy demo
-- **Use Cases**: E-commerce customer support, after-sales consultation, order inquiry, product knowledge base Q&A
+- **Positioning**: Production-grade LLM application built from 0 to deployment in 8 weeks — not a toy demo.Although validated in e-commerce customer service scenarios, the core architecture patterns (GraphRAG, Multi-Agent orchestration, hybrid retrieval, safety guardrails) are domain-agnostic and directly transferable to finance, legal, ESG compliance, healthcare, and any knowledge-intensive LLM application.
+- **Reference Implementation**: E-commerce customer support, after-sales consultation, order inquiry, product knowledge base Q&A
 
 ### Technical Highlights
 
@@ -272,7 +273,7 @@ python run.py
 
 A complete 8-week engineering retrospective covering architecture decisions, lessons learned, and best practices:
 
-1. [Week 1: Architecture Overview — Building a Production-Grade AI Customer Service System from Scratch](https://dev.to/jamesli/-from-0-to-mvp-in-2-weeks-building-a-production-grade-ai-customer-service-system-322n)
+1. [Week 1: Architecture Overview — Building a Production-Grade LLM Application from Scratch](https://dev.to/jamesli/-from-0-to-mvp-in-2-weeks-building-a-production-grade-ai-customer-service-system-322n)
 2. [Week 2: Production GraphRAG Pipeline — From PDF to Knowledge Graph](https://dev.to/jamesli/-production-grade-graphrag-data-pipeline-end-to-end-construction-from-pdf-parsing-to-knowledge-1dhj)
 3. [Week 3: GraphRAG Service Packaging — From CLI to Enterprise-Grade API](https://dev.to/jamesli/engineering-graphrag-for-production-api-design-query-optimization-and-service-reliability-2mh6)
 4. [Week 4: Multi-Agent Architecture — Complex Task Handling with LangGraph](https://dev.to/jamesli/building-an-enterprise-grade-multi-agent-customer-service-system-with-langgraph-2a31)
