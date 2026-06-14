@@ -248,7 +248,7 @@ MYSQL_HOST=localhost
 MYSQL_PORT=3306
 MYSQL_USER=root
 MYSQL_PASSWORD=your-password
-MYSQL_DATABASE=llm_customer_service
+MYSQL_DATABASE=llm_app_system
 ```
 
 ### 3. Initialize Database
