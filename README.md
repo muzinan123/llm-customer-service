@@ -273,12 +273,12 @@ python run.py
 
 A complete 8-week engineering retrospective covering architecture decisions, lessons learned, and best practices:
 
-1. [Week 1: Architecture Overview — Building a Production-Grade LLM Application from Scratch](https://dev.to/jamesli/-from-0-to-mvp-in-2-weeks-building-a-production-grade-ai-customer-service-system-322n)
-2. [Week 2: Production GraphRAG Pipeline — From PDF to Knowledge Graph](https://dev.to/jamesli/-production-grade-graphrag-data-pipeline-end-to-end-construction-from-pdf-parsing-to-knowledge-1dhj)
-3. [Week 3: GraphRAG Service Packaging — From CLI to Enterprise-Grade API](https://dev.to/jamesli/engineering-graphrag-for-production-api-design-query-optimization-and-service-reliability-2mh6)
-4. [Week 4: Multi-Agent Architecture — Complex Task Handling with LangGraph](https://dev.to/jamesli/building-an-enterprise-grade-multi-agent-customer-service-system-with-langgraph-2a31)
-5. [Week 5: Safety at the Core — Full-Chain LLM Guardrails for Production](https://dev.to/jamesli/building-safety-guardrails-for-llm-customer-service-that-actually-work-in-production-3g7b)
-6. [Week 6: Closing the Loop — Hybrid Knowledge Retrieval and Capability Integration](https://dev.to/jamesli/hybrid-knowledge-retrieval-combining-neo4j-graph-queries-graphrag-and-vector-search-for-3f89)
+1. [Week 1: From 0 to MVP in 2 Weeks — Building a Production-Grade LLM Application from Scratch](https://dev.to/jamesli/-from-0-to-mvp-in-2-weeks-building-a-production-grade-ai-customer-service-system-322n)
+2. [Week 2: Production-Grade GraphRAG Data Pipeline — From PDF Parsing to Knowledge Graph](https://dev.to/jamesli/-production-grade-graphrag-data-pipeline-end-to-end-construction-from-pdf-parsing-to-knowledge-1dhj)
+3. [Week 3: Engineering GraphRAG for Production — API Design, Query Optimization, and Service Reliability](https://dev.to/jamesli/engineering-graphrag-for-production-api-design-query-optimization-and-service-reliability-2mh6)
+4. [Week 4: From Single-Agent to Multi-Agent — Designing and Deploying an Enterprise-Grade LLM Application with LangGraph](https://dev.to/jamesli/building-an-enterprise-grade-multi-agent-customer-service-system-with-langgraph-2a31)
+5. [Week 5: Building Safety Guardrails for LLM Applications That Actually Work in Production](https://dev.to/jamesli/building-safety-guardrails-for-llm-customer-service-that-actually-work-in-production-3g7b)
+6. [Week 6: Hybrid Knowledge Retrieval — Combining Neo4j Graph Queries, GraphRAG and Vector Search for Enterprise LLM Applications](https://dev.to/jamesli/hybrid-knowledge-retrieval-combining-neo4j-graph-queries-graphrag-and-vector-search-for-3f89)
 7. [Week 7: Production Optimization — Inference Cost and Performance Control](https://dev.to/jamesli/production-optimization-inference-cost-and-performance-control-2433)
-8. [Week 8: 8-Week Retrospective — Architecture Decisions, Lessons Learned & Best Practices](https://dev.to/jamesli/building-a-production-grade-llm-customer-service-in-8-weeks-architecture-decisions-pitfalls-and-4nmi)
+8. [Week 8: Building a Production-Grade LLM Application in 8 Weeks — Architecture Decisions, Pitfalls, and Best Practices](https://dev.to/jamesli/building-a-production-grade-llm-customer-service-in-8-weeks-architecture-decisions-pitfalls-and-4nmi)
 9. [Bonus: From 60% to 93% — How We Built a Continuous Evaluation Framework for LLM Systems](https://dev.to/jamesli/from-60-to-93-how-we-built-a-continuous-evaluation-framework-for-llm-systems-i4)
