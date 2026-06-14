@@ -28,7 +28,8 @@ A production-grade multi-agent intelligent system built with FastAPI + LangGraph
 
 | Metric | Before | After | Measurement Basis |
 |:---|:---|:---|:---|
-| Q&A Accuracy | 70% | **94%** | 500 manually labeled test cases, Recall@3 |
+| Overall Q&A Accuracy | 70% | 94% | 500 manually labeled test cases, Recall@3 |
+| Text2Cypher SQL Accuracy  | 60% | 93% | Golden dataset, execution + semantic scoring  |
 | Throughput | — | **1500 QPS** | Load tested on 4-core 8GB cloud server with Redis caching |
 | Inference Cost | baseline | **-70%** | vs. single large-model inference |
 | Service Availability | — | **99.9%** | 72-hour stability load test |
